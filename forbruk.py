@@ -45,10 +45,10 @@ def main():
             idpris += pris
             creport.append({"date": dato, "consumption": consumption, "price": pris})
         idpris = round(idpris,2)
-        print(f"Pris for lader {id} {ladere[id]}\t{idpris}")
+        print(f"Pris for lader {id} {ladere[id]}\t{idpris} NOK")
         totalpris += idpris
     totalpris = round(totalpris,2)
-    print(f"Totalpris for perioden:\t{totalpris}")
+    print(f"Totalpris for perioden:\t{totalpris} NOK")
 
 if __name__ == "__main__":
     main()
