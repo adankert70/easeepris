@@ -4,6 +4,7 @@ Perioden er alltid hele foregående måned.
 Sett ditt Easee brukernavn og passord i env vars API_USER og API_PASSWORD 
 
 Programmet finner alle ladere assosiert med din konto og rapporterer forbruk per lader samt total.
+Region er satt til Norge, NO2.
 
 Start programmet: python3 forbruk.py
 
