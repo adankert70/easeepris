@@ -5,6 +5,7 @@ from easee import autentiser
 from easee import chargers
 from easee import forbruk
 from priser import hentpriser
+from plotdata import plotdata
 import argparse
 import datetime
 import calendar
@@ -23,6 +24,8 @@ def main():
                         required=False, help='CSV filename')
     parser.add_argument('-t', '--type', choices=['a', 'n'], type=str,
                         required=False, help='Append eller Ny fil')
+    parser.add_argument('-p', '--plot', action='store_true',
+                        required=False, help='Plot en rapport')
     args = parser.parse_args()
     if args.csv and args.type is None:
         parser.error("-c,--csv må ha -t,--type")
@@ -52,11 +55,11 @@ def main():
     ladere = chargers(token)
     if not ladere:
         sys.exit()
+    creport = []
     for id in ladere.keys():
         idpris = 0
         fjson = forbruk(token, id, first_day,
                         last_day)
-        creport = []
         for cjson in fjson:
             consumption = cjson['consumption']
             if consumption == 0:
@@ -66,23 +69,24 @@ def main():
             pris = consumption * factor
             idpris += pris
             creport.append(
-                {"date": dato, "consumption": consumption, "price": pris})
+                {"date": dato, "charger": ladere[id], "consumption": consumption, "price": pris})
         idpris = round(idpris, 2)
         print(f"Pris for lader {id} {ladere[id]}\t{idpris} NOK")
         totalpris += idpris
     totalpris = round(totalpris, 2)
     print(f"Totalpris for perioden:\t{totalpris} NOK")
-    fields = ['date', 'consumption', 'price'] 
+    fields = ['date', 'charger', 'consumption', 'price']
     if args.csv and ft:
         try:
-            with open(args.csv, ft, newline='') as file: 
-                writer = csv.DictWriter(file, fieldnames = fields)
+            with open(args.csv, ft, newline='') as file:
+                writer = csv.DictWriter(file, fieldnames=fields)
                 if ft == 'w':
                     writer.writeheader()
                 writer.writerows(creport)
         except:
             sys.exit('Skriving til CSV feilet.')
-
+    if args.plot:
+        plotdata(creport)
 
 
 if __name__ == "__main__":
