@@ -31,7 +31,7 @@ def main():
     print("Rapport slutt: ", last_day)
     priser = hentpriser(yr, mnd, last_day_no, region)
     user = os.getenv('API_USER')
-    pwd = os.environ.get('API_PASSWORD')
+    pwd = os.getenv('API_PASSWORD')
     token = autentiser(user, pwd)
     if not token:
         print("Jeg gir opp, logon feilet...")
