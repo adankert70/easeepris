@@ -2,8 +2,7 @@ import requests
 import json
 import sys
 
-def hentpriser(year,mnd,maxdag):
-    region = 'NO2'
+def hentpriser(year,mnd,maxdag,region):
     mnd = int(str(mnd).zfill(2))
     headers = {
         "accept": "application/json",
