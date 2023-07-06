@@ -8,6 +8,7 @@ from priser import hentpriser
 import argparse
 import datetime
 import calendar
+import csv
 
 
 def main():
@@ -18,7 +19,18 @@ def main():
                         required=True, help='Måned nr., feks 11')
     parser.add_argument('-y', '--year', type=int,
                         required=True, help='Årstall')
+    parser.add_argument('-c', '--csv', type=str,
+                        required=False, help='CSV filename')
+    parser.add_argument('-t', '--type', choices=['a', 'n'], type=str,
+                        required=False, help='Append eller Ny fil')
     args = parser.parse_args()
+    if args.csv and args.type is None:
+        parser.error("-c,--csv må ha -t,--type")
+    else:
+        if args.type == 'a':
+            ft = 'a'
+        elif args.type == 'n':
+            ft = 'w'
     region = args.region
     mnd = args.month
     yr = args.year
@@ -60,6 +72,13 @@ def main():
         totalpris += idpris
     totalpris = round(totalpris, 2)
     print(f"Totalpris for perioden:\t{totalpris} NOK")
+    fields = ['date', 'consumption', 'price'] 
+    with open(args.csv, ft, newline='') as file: 
+        writer = csv.DictWriter(file, fieldnames = fields)
+        if ft == 'w':
+            writer.writeheader()
+        writer.writerows(creport)
+
 
 
 if __name__ == "__main__":
