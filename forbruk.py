@@ -73,11 +73,15 @@ def main():
     totalpris = round(totalpris, 2)
     print(f"Totalpris for perioden:\t{totalpris} NOK")
     fields = ['date', 'consumption', 'price'] 
-    with open(args.csv, ft, newline='') as file: 
-        writer = csv.DictWriter(file, fieldnames = fields)
-        if ft == 'w':
-            writer.writeheader()
-        writer.writerows(creport)
+    if args.csv and ft:
+        try:
+            with open(args.csv, ft, newline='') as file: 
+                writer = csv.DictWriter(file, fieldnames = fields)
+                if ft == 'w':
+                    writer.writeheader()
+                writer.writerows(creport)
+        except:
+            sys.exit('Skriving til CSV feilet.')
 
 
 
