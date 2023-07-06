@@ -12,7 +12,7 @@ import calendar
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--region', type=str, required=True, help='Pris region, f.eks. NO2')
+    parser.add_argument('-r','--region', type=str, required=True, help='Pris region, f.eks. NO2')
     parser.add_argument('-m','--month', type=int,required=True, help='Måned nr., feks 11')
     parser.add_argument('-y','--year', type=int,required=True, help='Årstall')
     args = parser.parse_args()

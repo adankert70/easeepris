@@ -15,7 +15,7 @@ Region er satt til Norge, NO2.
 
         Arguments:
         -h, --help            show this help message and exit
-        --region REGION       Pris region, f.eks. NO2
+        -r REGION, --region REGION       Pris region, f.eks. NO2
         -m MONTH, --month MONTH Måned nr., feks 11
         -y YEAR, --year YEAR  Årstall
 
