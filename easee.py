@@ -1,15 +1,16 @@
 import requests
 import json
 
-def autentiser(user,pwd):
+
+def autentiser(user, pwd):
     url = "https://api.easee.com/api/accounts/login"
     headers = {
         "accept": "application/json",
         "content-type": "application/*+json"
     }
     payload = json.dumps({
-      "userName": user,
-      "password": pwd
+        "userName": user,
+        "password": pwd
     })
 
     response = requests.post(url, headers=headers, data=payload)
@@ -20,6 +21,7 @@ def autentiser(user,pwd):
     else:
         print(f"Noe gikk veldig galt. Retur kode {response.status_code}")
         return False
+
 
 def chargers(token):
     url = "https://api.easee.com/api/chargers"
@@ -37,7 +39,8 @@ def chargers(token):
         print(f"Fant ikke chargers. Retur kode {respons.status_code}")
         return False
 
-def forbruk(token,id,start,slutt):
+
+def forbruk(token, id, start, slutt):
     url = f"https://api.easee.com/api/chargers/lifetime-energy/{id}/hourly?from={start}&to={slutt}&tz=CET"
     headers = {
         "accept": "application/json",
@@ -49,5 +52,3 @@ def forbruk(token,id,start,slutt):
     else:
         print(f"Gah, feilet. Fikk ikke hentet data for id {id} på url {url}")
         return False
-
-

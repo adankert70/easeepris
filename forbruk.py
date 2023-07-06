@@ -12,21 +12,24 @@ import calendar
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-r','--region', type=str, required=True, help='Pris region, f.eks. NO2')
-    parser.add_argument('-m','--month', type=int,required=True, help='Måned nr., feks 11')
-    parser.add_argument('-y','--year', type=int,required=True, help='Årstall')
+    parser.add_argument('-r', '--region', type=str,
+                        required=True, help='Pris region, f.eks. NO2')
+    parser.add_argument('-m', '--month', type=int,
+                        required=True, help='Måned nr., feks 11')
+    parser.add_argument('-y', '--year', type=int,
+                        required=True, help='Årstall')
     args = parser.parse_args()
     region = args.region
     mnd = args.month
     yr = args.year
     totalpris = 0
-    current_date = datetime.date(yr,mnd,1)
+    current_date = datetime.date(yr, mnd, 1)
     first_day = current_date.replace(day=1)
     last_day_no = calendar.monthrange(yr, mnd)[1]
-    last_day = datetime.date(yr,mnd,last_day_no)
+    last_day = datetime.date(yr, mnd, last_day_no)
     print("Rapport start: ", first_day)
     print("Rapport slutt: ", last_day)
-    priser = hentpriser(yr, mnd, last_day_no,region)
+    priser = hentpriser(yr, mnd, last_day_no, region)
     user = os.getenv('API_USER')
     pwd = os.environ.get('API_PASSWORD')
     token = autentiser(user, pwd)
