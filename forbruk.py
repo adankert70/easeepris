@@ -39,8 +39,13 @@ def main():
     yr = args.year
     totalpris = 0
     current_date = datetime.date(yr, mnd, 1)
+    curmnd = current_date.month
+
     first_day = current_date.replace(day=1)
     last_day_no = calendar.monthrange(yr, mnd)[1]
+    if (int(mnd) == int(curmnd)):
+        last_day_no = datetime.datetime.now().day
+        print(f"Rapport for inneværende måned. Siste dag satt til {last_day_no}")
     last_day = datetime.date(yr, mnd, last_day_no)
     print("Rapport start: ", first_day)
     print("Rapport slutt: ", last_day)
@@ -50,6 +55,7 @@ def main():
     token = autentiser(user, pwd)
     if not token:
         print("Jeg gir opp, logon feilet...")
+        print("Har du satt API_USER og API_PASSWORD env vars riktig?")
         sys.exit()
     print("Logget på Easee API!")
     ladere = chargers(token)
