@@ -39,4 +39,6 @@ NB! Ikke verifisert korrekt! Resultatene kan være feil...og priser i fra din le
 
 Hvis -p brukes lages en enkel graf over pris på forbruket.
 
-![Alt text](plot.png)
+NB! Pris vises per time. I eksempelet nedenfor er hver søyle flere timer.
+
+![Plot eksempel](plot.png)
