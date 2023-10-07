@@ -37,13 +37,18 @@ def main():
     region = args.region
     mnd = args.month
     yr = args.year
+    print(f"Input år: {yr}\tInput måned: {mnd}")
     totalpris = 0
+    totalconsumption = 0
     current_date = datetime.date(yr, mnd, 1)
+    now_date = datetime.datetime.now()
+    print(current_date)
     curmnd = current_date.month
 
     first_day = current_date.replace(day=1)
     last_day_no = calendar.monthrange(yr, mnd)[1]
-    if (int(mnd) == int(curmnd)):
+    if (int(mnd) == int(now_date.month)):
+        print(f"Inneværende måned {curmnd}\tRapport måned: {mnd}")
         last_day_no = datetime.datetime.now().day
         print(f"Rapport for inneværende måned. Siste dag satt til {last_day_no}")
     last_day = datetime.date(yr, mnd, last_day_no)
@@ -64,6 +69,7 @@ def main():
     creport = []
     for id in ladere.keys():
         idpris = 0
+        idconsumption = 0
         fjson = forbruk(token, id, first_day,
                         last_day)
         for cjson in fjson:
@@ -74,13 +80,17 @@ def main():
             factor = priser[dato]
             pris = consumption * factor
             idpris += pris
+            idconsumption += consumption
             creport.append(
                 {"date": dato, "charger": ladere[id], "consumption": consumption, "price": pris})
         idpris = round(idpris, 2)
-        print(f"Pris for lader {id} {ladere[id]}\t{idpris} NOK")
+        idconsumption = round(idconsumption)
+        totalconsumption += idconsumption
+        print(f"Forbruk og pris for lader {id} {ladere[id]}\t{idconsumption}\t{idpris} NOK")
         totalpris += idpris
     totalpris = round(totalpris, 2)
     print(f"Totalpris for perioden:\t{totalpris} NOK")
+    print(f"Totalforbruk for perioden:\t{totalconsumption}")
     fields = ['date', 'charger', 'consumption', 'price']
     if args.csv and ft:
         try:
