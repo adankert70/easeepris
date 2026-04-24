@@ -182,6 +182,7 @@
                         <th>Charger</th>
                         <th>Consumption (kWh)</th>
                         <th>Price (NOK)</th>
+                        <th>% of Total</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -263,6 +264,9 @@
             row.insertCell(0).innerText = s.name;
             row.insertCell(1).innerText = s.consumption.toFixed(2);
             row.insertCell(2).innerText = s.price.toFixed(2);
+            
+            const percent = data.total_price > 0 ? (s.price / data.total_price * 100).toFixed(1) : '0.0';
+            row.insertCell(3).innerText = percent + '%';
         });
 
         document.getElementById('totalConsumption').innerText = data.total_consumption.toFixed(2) + ' kWh';

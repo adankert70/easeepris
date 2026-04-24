@@ -19,7 +19,19 @@ Combines hourly data from the [Hva koster strømmen? API](https://www.hvakosters
    API_PASSWORD=your_password
    ```
 
-## Usage
+## Web UI
+A modern, interactive web dashboard is available.
+- **Interactive Charts**: Visualizes daily costs using a stacked bar chart.
+- **Summary Table**: Shows total consumption and price per charger, including a percentage breakdown of the total cost.
+- **No Build Required**: Runs directly using FastAPI and Vanilla JavaScript.
+
+To start it, run:
+```powershell
+.\.venv\Scripts\python -m uvicorn app:app --reload
+```
+Then open [http://localhost:8000](http://localhost:8000) in your browser.
+
+## CLI Usage
 
 The program finds all chargers associated with your account and reports the consumption per charger as well as the total.
 
@@ -34,22 +46,12 @@ python forbruk.py -r REGION -m MONTH -y YEAR [-c CSV] [-t {a,n}] [-p]
 - `-y, --year YEAR`: Year (e.g., `2024`).
 - `-c, --csv CSV`: CSV filename for export.
 - `-t, --type {a,n}`: Use `a` for append or `n` for a new file (overwrite).
-- `-p, --plot`: Show a graphical report of the consumption.
+- `-p, --plot`: Show a graphical report of the consumption (daily aggregation).
 
 ### Example:
 ```powershell
 python forbruk.py --region NO2 -m 4 -y 2026 -p
 ```
 
-## Web UI
-A modern web dashboard is available. To start it, run:
-```powershell
-.\.venv\Scripts\python -m uvicorn app:app --reload
-```
-Then open [http://localhost:8000](http://localhost:8000) in your browser.
-
 ## Disclaimer
 Note: The results are not verified for accuracy. Actual prices from your electricity provider may vary depending on your specific contract.
-
-## Plot
-If `-p` is used, a graph showing the cost of consumption aggregated by day is displayed.
