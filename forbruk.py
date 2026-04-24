@@ -1,13 +1,10 @@
 import sys
 import os
-import datetime
-import calendar
 import csv
 import argparse
-from typing import List, Dict, Optional
+from typing import List, Dict
 
-from easee import EaseeClient
-from priser import hentpriser
+from logic import get_report_data
 from plotdata import plotdata
 from dotenv import load_dotenv
 
@@ -36,98 +33,22 @@ def main() -> None:
 
     file_mode = 'a' if args.type == 'a' else 'w' if args.type == 'n' else None
     
-    region = args.region
-    mnd = args.month
-    yr = args.year
-    
-    print(f"Periode: {yr}-{str(mnd).zfill(2)}")
-    
-    current_date = datetime.date(yr, mnd, 1)
-    now = datetime.datetime.now()
-    
-    first_day = current_date.replace(day=1)
-    _, last_day_in_month = calendar.monthrange(yr, mnd)
-    
-    if yr == now.year and mnd == now.month:
-        last_day_no = now.day
-        print(f"Rapport for inneværende måned. Bruker dag 1 til {last_day_no}.")
-    else:
-        last_day_no = last_day_in_month
-
-    last_day = datetime.date(yr, mnd, last_day_no)
-    print(f"Rapport start: {first_day}")
-    print(f"Rapport slutt: {last_day}")
-
-    # Hent priser
     try:
-        priser = hentpriser(yr, mnd, last_day_no, region)
-    except ValueError as e:
-        print(f"Feil ved henting av priser: {e}")
+        data = get_report_data(args.year, args.month, args.region)
+    except Exception as e:
+        print(f"Feil: {e}")
         sys.exit(1)
 
-    # Easee API klient
-    client = EaseeClient()
-    user = os.getenv('API_USER')
-    pwd = os.getenv('API_PASSWORD')
+    print(f"Periode: {data['period']}")
     
-    if not user or not pwd:
-        print("API_USER eller API_PASSWORD er ikke satt i .env eller miljøet.")
-        sys.exit(1)
-
-    if not client.authenticate(user, pwd):
-        print("Logon feilet. Sjekk legitimasjon.")
-        sys.exit(1)
-        
-    print("Logget på Easee API!")
-    
-    ladere = client.get_chargers()
-    if not ladere:
-        print("Fant ingen ladere.")
-        sys.exit(1)
-
-    report_data: List[Dict] = []
-    total_pris = 0.0
-    total_forbruk = 0.0
-
-    for lader_id, lader_navn in ladere.items():
-        id_pris = 0.0
-        id_forbruk = 0.0
-        
-        forbruk_data = client.get_consumption(lader_id, str(first_day), str(last_day))
-        
-        for entry in forbruk_data:
-            consumption = entry['consumption']
-            if consumption <= 0:
-                continue
-            
-            dato = entry['date']
-            factor = priser.get(dato)
-            
-            if factor is None:
-                # Noen ganger kan det mangle priser for fremtidige timer eller lignende
-                continue
-                
-            pris = consumption * factor
-            id_pris += pris
-            id_forbruk += consumption
-            
-            report_data.append({
-                "date": dato, 
-                "charger": lader_navn, 
-                "consumption": consumption, 
-                "price": pris
-            })
-        
-        print(f"Lader: {lader_navn} ({lader_id})")
-        print(f"  Forbruk: {id_forbruk:.2f} kWh")
-        print(f"  Pris:    {id_pris:.2f} NOK")
-        
-        total_forbruk += id_forbruk
-        total_pris += id_pris
+    for summary in data['summary']:
+        print(f"Lader: {summary['name']}")
+        print(f"  Forbruk: {summary['consumption']:.2f} kWh")
+        print(f"  Pris:    {summary['price']:.2f} NOK")
 
     print("-" * 30)
-    print(f"TOTAL FORBRUK: {total_forbruk:.2f} kWh")
-    print(f"TOTAL PRIS:    {total_pris:.2f} NOK")
+    print(f"TOTAL FORBRUK: {data['total_consumption']:.2f} kWh")
+    print(f"TOTAL PRIS:    {data['total_price']:.2f} NOK")
 
     # Lagre til CSV
     if args.csv and file_mode:
@@ -138,7 +59,7 @@ def main() -> None:
                 writer = csv.DictWriter(f, fieldnames=fields)
                 if not file_exists:
                     writer.writeheader()
-                writer.writerows(report_data)
+                writer.writerows(data['daily_entries'])
             print(f"Data lagret til {args.csv}")
         except Exception as e:
             print(f"Skriving til CSV feilet: {e}")
@@ -146,7 +67,7 @@ def main() -> None:
 
     # Plot
     if args.plot:
-        plotdata(report_data)
+        plotdata(data['daily_entries'])
 
 
 if __name__ == "__main__":
