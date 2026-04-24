@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>easeepris Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .controls {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        select, input {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #1d4ed8;
+        }
+
+        button:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            padding: 16px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        #chartContainer {
+            height: 400px;
+            position: relative;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>easeepris Dashboard</h1>
+    </header>
+
+    <div class="card">
+        <form id="reportForm" class="controls">
+            <div class="control-group">
+                <label for="year">Year</label>
+                <select id="year"></select>
+            </div>
+            <div class="control-group">
+                <label for="month">Month</label>
+                <select id="month"></select>
+            </div>
+            <div class="control-group">
+                <label for="region">Region</label>
+                <input type="text" id="region" value="NO2" placeholder="e.g. NO2" required>
+            </div>
+            <button type="submit" id="submitBtn">Generate Report</button>
+        </form>
+    </div>
+
+    <div id="loading" class="loading">Fetching data...</div>
+
+    <div id="results" style="display: none;">
+        <div class="card">
+            <h2>Summary</h2>
+            <table id="summaryTable">
+                <thead>
+                    <tr>
+                        <th>Charger</th>
+                        <th>Consumption (kWh)</th>
+                        <th>Price (NOK)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div class="summary-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Consumption</div>
+                    <div id="totalConsumption" class="stat-value"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Price</div>
+                    <div id="totalPrice" class="stat-value"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Daily Cost (Stacked)</h2>
+            <div id="chartContainer">
+                <canvas id="dailyChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const yearSelect = document.getElementById('year');
+    const monthSelect = document.getElementById('month');
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
+
+    for (let i = currentYear; i >= currentYear - 3; i--) {
+        const option = new Option(i, i);
+        yearSelect.add(option);
+    }
+
+    for (let i = 1; i <= 12; i++) {
+        const option = new Option(new Date(0, i - 1).toLocaleString('en', { month: 'long' }), i);
+        if (i === currentMonth) option.selected = true;
+        monthSelect.add(option);
+    }
+
+    let chart = null;
+
+    document.getElementById('reportForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const year = parseInt(yearSelect.value);
+        const month = parseInt(monthSelect.value);
+        const region = document.getElementById('region').value;
+        const btn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+
+        btn.disabled = true;
+        loading.style.display = 'block';
+        results.style.display = 'none';
+
+        try {
+            const response = await fetch(`/api/report?year=${year}&month=${month}&region=${region}`);
+            if (!response.ok) throw new Error(await response.text());
+            const data = await response.json();
+            
+            updateUI(data, year, month);
+        } catch (err) {
+            alert('Error: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            loading.style.display = 'none';
+        }
+    });
+
+    function updateUI(data, year, month) {
+        document.getElementById('results').style.display = 'block';
+        
+        const tbody = document.querySelector('#summaryTable tbody');
+        tbody.innerHTML = '';
+        data.summary.forEach(s => {
+            const row = tbody.insertRow();
+            row.insertCell(0).innerText = s.name;
+            row.insertCell(1).innerText = s.consumption.toFixed(2);
+            row.insertCell(2).innerText = s.price.toFixed(2);
+        });
+
+        document.getElementById('totalConsumption').innerText = data.total_consumption.toFixed(2) + ' kWh';
+        document.getElementById('totalPrice').innerText = data.total_price.toFixed(2) + ' NOK';
+
+        // Generate full list of days for the selected month
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const sortedDates = [];
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            sortedDates.push(dateStr);
+        }
+
+        // Process Chart Data
+        const dailyAgg = {}; // { date: { charger: price } }
+        const chargers = new Set();
+        
+        data.daily_entries.forEach(entry => {
+            const date = entry.date.split('T')[0];
+            if (!dailyAgg[date]) dailyAgg[date] = {};
+            if (!dailyAgg[date][entry.charger]) dailyAgg[date][entry.charger] = 0;
+            dailyAgg[date][entry.charger] += entry.price;
+            chargers.add(entry.charger);
+        });
+
+        const chargerList = Array.from(chargers);
+        const datasets = chargerList.map((charger, index) => {
+            const colors = [
+                'rgba(37, 99, 235, 0.7)', 
+                'rgba(16, 185, 129, 0.7)', 
+                'rgba(245, 158, 11, 0.7)', 
+                'rgba(239, 68, 68, 0.7)'
+            ];
+            return {
+                label: charger,
+                data: sortedDates.map(date => dailyAgg[date] ? (dailyAgg[date][charger] || 0) : 0),
+                backgroundColor: colors[index % colors.length]
+            };
+        });
+
+        if (chart) chart.destroy();
+        
+        const ctx = document.getElementById('dailyChart').getContext('2d');
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: sortedDates.map(d => d.split('-')[2]), // Just the day number
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { 
+                        stacked: true,
+                        title: { display: true, text: 'Day of Month' }
+                    },
+                    y: { 
+                        stacked: true, 
+                        title: { display: true, text: 'Price (NOK)' },
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) {
+                                    label += Math.round(context.parsed.y) + ' NOK';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
